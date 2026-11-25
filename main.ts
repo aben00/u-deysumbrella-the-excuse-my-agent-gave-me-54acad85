@@ -40,6 +40,14 @@ function checkLine(line: string): { chars: number; bytes: number } {
   if (line.includes("\n") || line.includes("\r")) {
     throw new Error("line must be a single line");
   }
+  // The gate reads the file as UTF-8 text: a stray control character would
+  // survive the write but read back as something else, so refuse it here.
+  for (const ch of line) {
+    const cp = ch.codePointAt(0) as number;
+    if (cp < 0x20 || cp === 0x7f) {
+      throw new Error(`line holds a control character (U+${cp.toString(16)})`);
+    }
+  }
   return { chars, bytes };
 }
 
